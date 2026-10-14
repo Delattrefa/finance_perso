@@ -1,0 +1,22 @@
+{% load finances_tags %}
+<div id="cours-{{ position.pk }}" class="whitespace-nowrap">
+  <details class="group relative inline-block">
+    <summary class="tabular cursor-pointer list-none rounded px-1 hover:bg-slate-100 dark:hover:bg-slate-800" title="Mettre à jour le cours">
+      {% if position.dernier_cours is not None %}{{ position.dernier_cours|monnaie:position.compte_titre.devise }}{% else %}<span class="text-amber-600">à saisir</span>{% endif %}
+      {% if position.date_dernier_cours %}<span class="block text-[11px] text-slate-400">{{ position.date_dernier_cours|date:"d/m/Y" }}</span>{% endif %}
+    </summary>
+    <form hx-post="{% url 'finances:position_cours' position.pk %}" hx-target="#cours-{{ position.pk }}" hx-swap="outerHTML"
+          method="post" action="{% url 'finances:position_cours' position.pk %}"
+          class="absolute right-0 z-20 mt-1 w-56 space-y-2 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-lg dark:border-slate-700 dark:bg-slate-900">
+      {% csrf_token %}
+      {% if form_cours.errors %}<p class="text-xs text-rose-600">Cours ou date invalide.</p>{% endif %}
+      <label class="sr-only" for="cours-valeur-{{ position.pk }}">Cours</label>
+      <input id="cours-valeur-{{ position.pk }}" name="cours" inputmode="decimal" required placeholder="Cours" value="{{ position.dernier_cours|valeur_saisie }}"
+             class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800">
+      <label class="sr-only" for="cours-date-{{ position.pk }}">Date</label>
+      <input id="cours-date-{{ position.pk }}" name="date" type="date" required value="{% now 'Y-m-d' %}"
+             class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800">
+      <button class="w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500">Mettre à jour</button>
+    </form>
+  </details>
+</div>

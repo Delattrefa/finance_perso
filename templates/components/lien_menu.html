@@ -1,0 +1,7 @@
+{% load finances_tags %}{% with courant=request.resolver_match.url_name %}
+<a href="{% url 'finances:'|add:nom %}"
+   class="flex items-center gap-3 rounded-lg px-3 py-2 font-medium transition
+   {% if courant == nom or prefixe and courant|commence_par:prefixe %}bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100{% endif %}"
+   {% if courant == nom %}aria-current="page"{% endif %}>
+  {% icone icone_nom "h-4 w-4" %}{{ libelle }}
+</a>{% endwith %}

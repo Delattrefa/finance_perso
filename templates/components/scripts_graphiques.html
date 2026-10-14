@@ -1,0 +1,3 @@
+{% load static %}{{ graphiques|json_script:"donnees-graphiques" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+<script src="{% static 'js/graphiques.js' %}" defer></script>

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}Budget · {{ plan.nom }}{% endblock %}
+{% block titre_mobile %}Budget{% endblock %}
+{% block fil %}<a href="{% url 'finances:budget_plans' %}" class="text-sm text-slate-500 hover:underline">Plans budgétaires</a>{% endblock %}
+{% block h1 %}{{ plan.nom }}{% if plan.actif %} <span class="ml-1 align-middle rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">actif</span>{% endif %}{% endblock %}
+{% block sous_titre %}<p class="mt-1 text-sm text-slate-500">{{ plan.annee_debut }} – {{ plan.annee_fin }} · indexation annuelle {{ plan.taux_indexation|pct:2 }} · réel vs prévisionnel</p>{% endblock %}
+{% block actions %}
+  {% if not plan.actif %}
+    <form method="post" action="{% url 'finances:budget_plan_activer' plan.pk %}">{% csrf_token %}
+      <button class="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-400">Activer ce plan</button>
+    </form>
+  {% endif %}
+  <details class="relative">
+    <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900">{% icone "settings" %} Plan</summary>
+    <div class="absolute right-0 z-30 mt-1 w-72 rounded-xl border border-slate-200 bg-white p-2 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900">
+      <a href="{% url 'finances:budget_plan_modifier' plan.pk %}" class="block rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">Modifier le plan (années, indexation)</a>
+      <form method="post" action="{% url 'finances:budget_plan_recalculer' plan.pk %}">{% csrf_token %}
+        <button class="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800">Recalculer les montants<span class="block text-xs text-slate-500">saisies manuelles conservées</span></button>
+      </form>
+      <form method="post" action="{% url 'finances:budget_plan_recalculer' plan.pk %}" onsubmit="return confirm('Remplacer toutes les saisies manuelles par les montants calculés ?')">{% csrf_token %}
+        <input type="hidden" name="ecraser" value="1">
+        <button class="block w-full rounded-lg px-3 py-2 text-left text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950">Recalculer en écrasant les saisies manuelles</button>
+      </form>
+      {% if plans|length > 1 %}
+        <p class="mt-2 border-t border-slate-200 px-3 pb-1 pt-2 text-xs font-semibold uppercase text-slate-400 dark:border-slate-700">Autres plans</p>
+        {% for p in plans %}{% if p.pk != plan.pk %}<a href="{% url 'finances:budget_matrice' p.pk %}" class="block rounded-lg px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800">{{ p }}</a>{% endif %}{% endfor %}
+      {% endif %}
+    </div>
+  </details>
+  <a href="{% url 'finances:budget_ligne_ajouter' plan.pk %}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">{% icone "plus" %} Ligne budgétaire</a>
+{% endblock %}
+{% block contenu %}
+<div id="matrice" class="htmx-masquer-pendant">{% include "finances/budget/partials/matrice.html" %}</div>
+{% endblock %}

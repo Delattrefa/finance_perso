@@ -1,0 +1,12 @@
+{% comment %}Boutons radio présentés en contrôle segmenté. Paramètres : field, couleurs (optionnel).{% endcomment %}
+<div>
+  <span class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{{ field.label }}</span>
+  <div class="inline-flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800" role="radiogroup">
+    {% for radio in field %}
+      <label class="cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:text-slate-900 has-[:checked]:bg-white has-[:checked]:text-indigo-700 has-[:checked]:shadow-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-indigo-500 dark:text-slate-300 dark:has-[:checked]:bg-slate-700 dark:has-[:checked]:text-white [&>input]:sr-only">
+        {{ radio.tag }}{{ radio.choice_label }}
+      </label>
+    {% endfor %}
+  </div>
+  {% for erreur in field.errors %}<p class="mt-1 text-xs font-medium text-rose-600">{{ erreur }}</p>{% endfor %}
+</div>

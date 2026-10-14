@@ -1,0 +1,5 @@
+{% extends "components/page_formulaire.html" %}
+{% block titre %}{% if object %}Modifier {{ object }}{% else %}Nouveau compte{% endif %}{% endblock %}
+{% block h1 %}{% if object %}Modifier « {{ object }} »{% else %}Nouveau compte{% endif %}{% endblock %}
+{% block description %}{% if not object %}<p class="mb-4 text-sm text-slate-500">Le <strong>solde initial</strong> est le solde à la date d'ouverture indiquée : seules les opérations postérieures doivent ensuite être saisies.</p>{% endif %}{% endblock %}
+{% block suppression %}{% if object %}<a href="{% url 'finances:compte_supprimer' object.pk %}" class="ml-auto text-sm font-medium text-rose-600 hover:underline">Supprimer</a>{% endif %}{% endblock %}

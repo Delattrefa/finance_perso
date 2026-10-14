@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}Plans budgétaires{% endblock %}
+{% block titre_mobile %}Budget{% endblock %}
+{% block h1 %}Plans budgétaires{% endblock %}
+{% block sous_titre %}<p class="mt-1 text-sm text-slate-500">Un plan couvre 5 ans par défaut. Le plan actif alimente le tableau de bord.</p>{% endblock %}
+{% block actions %}<a href="{% url 'finances:budget_plan_ajouter' %}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">{% icone "plus" %} Nouveau plan</a>{% endblock %}
+{% block contenu %}
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+  {% for plan in plans %}
+    <article class="relative rounded-2xl border bg-white p-5 shadow-sm dark:bg-slate-900 {% if plan.actif %}border-emerald-300 dark:border-emerald-800{% else %}border-slate-200 dark:border-slate-800{% endif %}">
+      <div class="flex items-start justify-between">
+        <h2 class="font-semibold"><a href="{% url 'finances:budget_matrice' plan.pk %}" class="after:absolute after:inset-0">{{ plan.nom }}</a></h2>
+        {% if plan.actif %}<span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">actif</span>{% endif %}
+      </div>
+      <p class="mt-1 text-sm text-slate-500">{{ plan.annee_debut }} – {{ plan.annee_fin }} · {{ plan.duree_annees }} an{{ plan.duree_annees|pluralize }} · indexation {{ plan.taux_indexation|pct:2 }}</p>
+      {% if plan.description %}<p class="mt-2 line-clamp-2 text-sm">{{ plan.description }}</p>{% endif %}
+    </article>
+  {% empty %}
+    <div class="col-span-full rounded-2xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
+      <p class="font-medium">Aucun plan budgétaire.</p>
+      <p class="mt-1 text-sm text-slate-500">Créez un plan sur 5 ans, puis ajoutez une ligne par poste de dépense ou de revenu.</p>
+      <a href="{% url 'finances:budget_plan_ajouter' %}" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">{% icone "plus" %} Créer un plan</a>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

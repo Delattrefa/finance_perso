@@ -1,0 +1,131 @@
+{% load static finances_tags %}<!doctype html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}PyFinance{% endblock %} · PyFinance</title>
+  <script>
+    /* Thème avant le premier rendu (évite le flash) : session > profil > système */
+    (function () {
+      var theme = "{{ theme|default:'SYSTEME' }}";
+      try { theme = localStorage.getItem("pf-theme") || theme; } catch (e) {}
+      var sombre = theme === "SOMBRE" || (theme === "SYSTEME" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      if (sombre) document.documentElement.classList.add("dark");
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind Play CDN en développement ; en production, compiler avec le CLI Tailwind (voir README). -->
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: { extend: { fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"] } } },
+    };
+  </script>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="{% static 'js/app.js' %}" defer></script>
+  {% block entete %}{% endblock %}
+</head>
+<body class="h-full bg-slate-50 font-sans text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+      {% if user.is_authenticated %}data-url-saisie="{% url 'finances:operation_ajouter' %}" data-url-recherche="{% url 'finances:recherche' %}"{% endif %}>
+
+{% if user.is_authenticated %}
+  {% with url=request.resolver_match.url_name %}
+  <!-- Barre latérale -->
+  <nav id="menu" class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform lg:translate-x-0 dark:border-slate-800 dark:bg-slate-900" aria-label="Navigation principale">
+    <div class="flex h-16 items-center justify-between px-5">
+      <a href="{% url 'finances:dashboard' %}" class="flex items-center gap-2 text-lg font-bold tracking-tight">
+        <span class="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-white">{% icone "wallet" "h-4 w-4" %}</span>
+        PyFinance
+      </a>
+      <button type="button" class="rounded p-1 text-slate-500 lg:hidden" data-menu-fermer aria-label="Fermer le menu">{% icone "x" "h-5 w-5" %}</button>
+    </div>
+
+    <div class="px-4 pb-3">
+      <a href="{% url 'finances:operation_ajouter' %}" class="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+        {% icone "plus" %} Nouvelle opération <kbd class="ml-auto rounded bg-indigo-500 px-1.5 text-xs">N</kbd>
+      </a>
+    </div>
+
+    <div class="flex-1 space-y-6 overflow-y-auto px-3 py-2 text-sm">
+      {% include "components/lien_menu.html" with nom="dashboard" libelle="Tableau de bord" icone_nom="layout-dashboard" %}
+      <div class="space-y-1">
+        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Gestion</p>
+        {% include "components/lien_menu.html" with nom="recherche" libelle="Opérations" icone_nom="search" prefixe="operation" %}
+        {% include "components/lien_menu.html" with nom="comptes" libelle="Comptes" icone_nom="landmark" prefixe="compte" %}
+        {% include "components/lien_menu.html" with nom="portefeuille" libelle="Compte titres" icone_nom="chart-candlestick" prefixe="position titre_" %}
+        {% include "components/lien_menu.html" with nom="budget" libelle="Budget" icone_nom="calculator" prefixe="budget" %}
+        {% include "components/lien_menu.html" with nom="categories" libelle="Catégories" icone_nom="tags" prefixe="categorie sous_categorie" %}
+      </div>
+      <div class="space-y-1">
+        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Rapports</p>
+        {% include "components/lien_menu.html" with nom="rapport_categories" libelle="Par catégorie" icone_nom="chart-pie" %}
+        {% include "components/lien_menu.html" with nom="rapport_patrimoine" libelle="Patrimoine" icone_nom="chart-line" %}
+        {% include "components/lien_menu.html" with nom="rapport_comparatifs" libelle="Comparatifs" icone_nom="arrow-left-right" %}
+        {% include "components/lien_menu.html" with nom="rapport_titres" libelle="Titres" icone_nom="trending-up" %}
+      </div>
+    </div>
+
+    <div class="border-t border-slate-200 p-3 text-sm dark:border-slate-800">
+      <div class="flex items-center gap-1">
+        <a href="{% url 'profil' %}" class="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">
+          {% icone "settings" %}<span class="truncate">{{ user.first_name|default:user.username }}</span>
+        </a>
+        <button type="button" data-basculer-theme class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" title="Basculer clair / sombre" aria-label="Basculer le thème">
+          <span class="dark:hidden">{% icone "moon" %}</span><span class="hidden dark:inline">{% icone "sun" %}</span>
+        </button>
+        {% if user.is_staff %}
+          <a href="{% url 'admin:index' %}" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" title="Administration">{% icone "shield" %}</a>
+        {% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+          <button class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" title="Déconnexion" aria-label="Déconnexion">{% icone "log-out" %}</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  {% endwith %}
+
+  <!-- Barre supérieure mobile -->
+  <div class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-900/90">
+    <button type="button" data-menu-ouvrir class="rounded p-1" aria-label="Ouvrir le menu">{% icone "menu" "h-5 w-5" %}</button>
+    <span class="font-semibold">{% block titre_mobile %}PyFinance{% endblock %}</span>
+    <a href="{% url 'finances:operation_ajouter' %}" class="ml-auto rounded-lg bg-indigo-600 p-2 text-white" aria-label="Nouvelle opération">{% icone "plus" %}</a>
+  </div>
+{% endif %}
+
+<!-- Messages -->
+<div class="pointer-events-none fixed right-4 top-4 z-50 flex w-full max-w-sm flex-col gap-2" aria-live="polite">
+  {% for message in messages %}
+    <div data-message="{{ message.tags }}" class="pointer-events-auto flex items-start gap-3 rounded-xl border p-4 text-sm shadow-lg
+      {% if message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200
+      {% elif message.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200
+      {% else %}border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200{% endif %}">
+      {% if message.tags == 'error' %}{% icone "triangle-alert" "h-5 w-5 shrink-0" %}{% else %}{% icone "check" "h-5 w-5 shrink-0" %}{% endif %}
+      <p class="flex-1">{{ message }}</p>
+      <button type="button" data-fermer class="opacity-60 hover:opacity-100" aria-label="Fermer">{% icone "x" %}</button>
+    </div>
+  {% endfor %}
+</div>
+
+<main class="{% if user.is_authenticated %}lg:pl-64{% endif %}">
+  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    {% block contenu_complet %}
+      <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+          {% block fil %}{% endblock %}
+          <h1 class="text-2xl font-bold tracking-tight">{% block h1 %}{% endblock %}</h1>
+          {% block sous_titre %}{% endblock %}
+        </div>
+        <div class="flex flex-wrap items-center gap-2">{% block actions %}{% endblock %}</div>
+      </header>
+      {% block contenu %}{% endblock %}
+    {% endblock %}
+  </div>
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

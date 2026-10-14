@@ -1,0 +1,8 @@
+{% comment %}Carte d'indicateur. Paramètres : titre, valeur, detail (optionnel), icone_nom, classe_valeur.{% endcomment %}
+{% load finances_tags %}<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  <div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+    <span>{{ titre }}</span>{% if icone_nom %}{% icone icone_nom "h-4 w-4" %}{% endif %}
+  </div>
+  <p class="mt-2 text-2xl font-semibold tracking-tight {% firstof classe_valeur %}">{{ valeur }}</p>
+  {% if detail %}<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ detail }}</p>{% endif %}
+</div>

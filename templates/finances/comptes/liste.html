@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}Comptes{% endblock %}
+{% block titre_mobile %}Comptes{% endblock %}
+{% block h1 %}{% if archives %}Comptes archivés{% else %}Comptes{% endif %}{% endblock %}
+{% block actions %}
+  {% if archives %}
+    <a href="{% url 'finances:comptes' %}" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900">Comptes actifs</a>
+  {% elif nb_archives %}
+    <a href="?archives=1" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900">{% icone "archive" %} Archivés ({{ nb_archives }})</a>
+  {% endif %}
+  <a href="{% url 'finances:compte_ajouter' %}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">{% icone "plus" %} Nouveau compte</a>
+{% endblock %}
+{% block contenu %}
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+  {% for compte in comptes %}
+    <article class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      <span class="absolute inset-x-0 top-0 h-1" style="background-color: {{ compte.couleur }}"></span>
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h2 class="truncate font-semibold"><a href="{% url 'finances:compte' compte.pk %}" class="after:absolute after:inset-0">{% icone compte.icone "mr-1 inline h-4 w-4" %}{{ compte.nom }}</a></h2>
+          <p class="text-xs text-slate-500">{{ compte.get_type_display }}{% if compte.institution %} · {{ compte.institution }}{% endif %}</p>
+        </div>
+        <a href="{% url 'finances:compte_modifier' compte.pk %}" class="relative z-10 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800" title="Modifier">{% icone "pencil" %}</a>
+      </div>
+      <p class="tabular mt-4 text-2xl font-semibold tracking-tight {{ compte.solde_total|couleur_montant }}">{{ compte.solde_total|monnaie:compte.devise }}</p>
+      {% if compte.est_compte_titre %}
+        <p class="mt-1 text-xs text-slate-500">Titres {{ compte.valorisation_titres|monnaie:compte.devise }} · Liquidités {{ compte.solde_especes|monnaie:compte.devise }}</p>
+      {% endif %}
+      {% if not compte.inclure_patrimoine %}<p class="mt-2 text-xs italic text-slate-400">Exclu du patrimoine net</p>{% endif %}
+    </article>
+  {% empty %}
+    <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500 dark:border-slate-700">
+      {% if archives %}Aucun compte archivé.{% else %}Aucun compte. <a href="{% url 'finances:compte_ajouter' %}" class="font-medium text-indigo-600 hover:underline">Créer le premier</a>{% endif %}
+    </p>
+  {% endfor %}
+</div>
+{% endblock %}

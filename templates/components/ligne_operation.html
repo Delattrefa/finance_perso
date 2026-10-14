@@ -1,0 +1,45 @@
+{% comment %}
+Ligne de tableau d'une opération.
+Paramètres : operation, compte (perspective du solde, optionnel), solde (bool : colonne « solde après »), compact (bool).
+{% endcomment %}
+{% load finances_tags %}
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+  <td class="tabular whitespace-nowrap py-2.5 pl-4 pr-3 text-sm text-slate-500 dark:text-slate-400">{{ operation.date|date:"d/m/Y" }}</td>
+  <td class="max-w-xs py-2.5 pr-3 text-sm">
+    <p class="truncate font-medium">{{ operation.tiers_payeur|default:operation.description|default:operation.get_type_display }}</p>
+    {% if operation.tiers_payeur and operation.description %}<p class="truncate text-xs text-slate-500">{{ operation.description }}</p>{% endif %}
+  </td>
+  <td class="py-2.5 pr-3 text-sm">
+    {% if operation.est_virement %}
+      <span class="inline-flex items-center gap-1 text-slate-500">{% icone "arrow-left-right" "h-3.5 w-3.5" %}
+        {% if compte and compte.pk == operation.compte_destination_id %}depuis {{ operation.compte.nom }}{% else %}vers {{ operation.compte_destination.nom }}{% endif %}
+      </span>
+    {% elif operation.categorie %}
+      {% with c=operation.couleur %}
+      <span class="inline-flex max-w-[14rem] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-xs font-medium" style="background-color: {{ c }}1f; color: {{ c }}">
+        <span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background-color: {{ c }}"></span>
+        <span class="truncate">{{ operation.categorie.nom }}{% if operation.sous_categorie %} › {{ operation.sous_categorie.nom }}{% endif %}</span>
+      </span>
+      {% endwith %}
+    {% else %}
+      <span class="text-xs italic text-slate-400">Non catégorisée</span>
+    {% endif %}
+  </td>
+  {% if not compte %}<td class="hidden whitespace-nowrap py-2.5 pr-3 text-sm text-slate-500 md:table-cell">{{ operation.compte.nom }}</td>{% endif %}
+  {% with montant=operation|montant_pour:compte %}
+  <td class="tabular whitespace-nowrap py-2.5 pr-3 text-right text-sm font-semibold {% if operation.est_virement and not compte %}text-slate-500{% else %}{{ montant|couleur_montant }}{% endif %}">
+    {% if operation.est_virement and not compte %}{{ operation.montant|monnaie:operation.compte.devise }}{% else %}{{ montant|monnaie_signe:operation.compte.devise }}{% endif %}
+  </td>
+  {% endwith %}
+  {% if solde %}<td class="tabular hidden whitespace-nowrap py-2.5 pr-3 text-right text-sm text-slate-500 sm:table-cell">{{ operation.solde_apres|monnaie:compte.devise }}</td>{% endif %}
+  {% if not compact %}
+  <td class="hidden py-2.5 pr-3 lg:table-cell">{% include "finances/partials/statut_operation.html" %}</td>
+  <td class="whitespace-nowrap py-2.5 pr-4 text-right">
+    <div class="flex justify-end gap-1 opacity-60 transition group-hover:opacity-100">
+      <a href="{% url 'finances:operation_modifier' operation.pk %}?next={{ request.get_full_path|urlencode }}" class="rounded p-1 hover:bg-slate-200 dark:hover:bg-slate-700" title="Modifier">{% icone "pencil" %}</a>
+      <a href="{% url 'finances:operation_ajouter' %}?depuis={{ operation.pk }}" class="rounded p-1 hover:bg-slate-200 dark:hover:bg-slate-700" title="Dupliquer">{% icone "copy" %}</a>
+      <a href="{% url 'finances:operation_supprimer' operation.pk %}?next={{ request.get_full_path|urlencode }}" class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950" title="Supprimer">{% icone "trash-2" %}</a>
+    </div>
+  </td>
+  {% endif %}
+</tr>

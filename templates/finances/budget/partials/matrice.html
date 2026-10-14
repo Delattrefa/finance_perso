@@ -1,0 +1,133 @@
+{% load finances_tags %}
+{% with plan=matrice.plan vue=matrice.vue %}
+<div hx-get="{% url 'finances:budget_matrice' plan.pk %}?vue={{ vue }}&annee={{ matrice.annee }}" hx-trigger="budget-modifie from:body" hx-target="#matrice">
+
+  <!-- Barre d'outils : vues et années -->
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <nav class="inline-flex rounded-xl bg-slate-100 p-1 text-sm dark:bg-slate-800" aria-label="Vue">
+      {% for cle, libelle in vues.items %}
+        <a href="?vue={{ cle }}&annee={{ matrice.annee }}" hx-get="?vue={{ cle }}&annee={{ matrice.annee }}" hx-target="#matrice" hx-push-url="true"
+           class="rounded-lg px-3 py-1.5 font-medium {% if cle == vue %}bg-white text-indigo-700 shadow-sm dark:bg-slate-700 dark:text-white{% else %}text-slate-600 hover:text-slate-900 dark:text-slate-300{% endif %}">{{ libelle }}</a>
+      {% endfor %}
+    </nav>
+    {% if vue != "quinquennale" %}
+      <nav class="inline-flex items-center gap-1 text-sm" aria-label="Année">
+        {% for an in plan.annees %}
+          <a href="?vue={{ vue }}&annee={{ an }}" hx-get="?vue={{ vue }}&annee={{ an }}" hx-target="#matrice" hx-push-url="true"
+             class="tabular rounded-lg px-2.5 py-1 font-medium {% if an == matrice.annee %}bg-indigo-600 text-white{% else %}text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800{% endif %}">{{ an }}</a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+  </div>
+
+  {% if alertes %}
+    <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50/60 p-4 dark:border-rose-900 dark:bg-rose-950/30">
+      <p class="flex items-center gap-2 text-sm font-semibold text-rose-800 dark:text-rose-300">{% icone "triangle-alert" %}
+        {% with derniere=matrice.colonnes|last %}{{ alertes|length }} poste{{ alertes|length|pluralize }} à surveiller — {{ derniere.libelle }}{% endwith %}</p>
+      <ul class="mt-2 flex flex-wrap gap-2 text-xs">
+        {% for ligne, cellule in alertes|slice:":8" %}
+          <li class="rounded-full px-2.5 py-1 font-medium {{ cellule.statut|classes_statut }}">{{ ligne.libelle }} : {{ cellule.taux|pct:0 }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if not matrice.depenses.groupes and not matrice.revenus.groupes %}
+    <div class="rounded-2xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
+      <p class="font-medium">Ce plan ne contient encore aucune ligne.</p>
+      <p class="mt-1 text-sm text-slate-500">Ajoutez une ligne par catégorie (ou sous-catégorie) : les 12 × {{ plan.duree_annees }} montants mensuels sont générés automatiquement.</p>
+      <a href="{% url 'finances:budget_ligne_ajouter' plan.pk %}" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">{% icone "plus" %} Ajouter une ligne</a>
+    </div>
+  {% else %}
+  <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <table class="matrice min-w-full text-sm">
+      <thead class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <tr>
+          <th scope="col" class="min-w-[15rem] bg-slate-50 px-4 py-3 text-left dark:bg-slate-800">Poste <span class="font-normal normal-case tracking-normal text-slate-400">· réel / prévu</span></th>
+          {% for c in matrice.colonnes %}
+            <th scope="col" class="whitespace-nowrap bg-slate-50 px-3 py-3 text-right dark:bg-slate-800 {% if c.est_total %}border-l border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-200{% endif %}">{{ c.libelle }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+
+      {% for section in matrice.sections %}
+        <tbody>
+          <tr><th colspan="{{ matrice.colonnes|length|add:1 }}" scope="colgroup" class="bg-white px-4 pb-1 pt-5 text-left text-xs font-bold uppercase tracking-wider {% if section.type_flux == 'DEPENSE' %}text-rose-600{% else %}text-emerald-600{% endif %} dark:bg-slate-900">{{ section.libelle }}</th></tr>
+        </tbody>
+        {% for groupe in section.groupes %}
+          <tbody data-groupe="{{ plan.pk }}-{{ section.type_flux }}-{% if groupe.categorie %}{{ groupe.categorie.pk }}{% else %}nc{% endif %}" class="border-t border-slate-100 dark:border-slate-800">
+            {% with premiere=groupe.lignes.0 %}
+            <tr class="font-medium">
+              <th scope="row" class="bg-white px-4 py-2 text-left font-medium dark:bg-slate-900">
+                <div class="flex items-center gap-2">
+                  {% if groupe.detaille %}
+                    <button type="button" data-basculer-groupe class="rounded p-0.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Replier / déplier">{% icone "chevron-down" "chevron h-4 w-4 transition-transform" %}</button>
+                  {% else %}<span class="w-5"></span>{% endif %}
+                  <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color: {{ groupe.total.couleur }}"></span>
+                  <span class="truncate">{{ groupe.total.libelle }}</span>
+                  {% if not groupe.detaille and premiere.budget %}
+                    <a href="{% url 'finances:budget_ligne_modifier' premiere.budget.pk %}" class="ml-auto text-slate-300 hover:text-indigo-600" title="Modifier la ligne">{% icone "pencil" "h-3.5 w-3.5" %}</a>
+                  {% elif premiere.hors_budget and not groupe.detaille and groupe.categorie %}
+                    <a href="{% url 'finances:budget_ligne_ajouter' plan.pk %}?categorie={{ groupe.categorie.pk }}" class="ml-auto rounded bg-slate-100 px-1.5 text-[11px] font-normal text-slate-500 hover:text-indigo-600 dark:bg-slate-800">Budgéter</a>
+                  {% elif groupe.categorie %}
+                    <a href="{% url 'finances:budget_ligne_ajouter' plan.pk %}?categorie={{ groupe.categorie.pk }}" class="ml-auto text-slate-300 hover:text-indigo-600" title="Ajouter une sous-catégorie">{% icone "plus" "h-3.5 w-3.5" %}</a>
+                  {% endif %}
+                </div>
+              </th>
+              {% if groupe.detaille %}
+                {% for cellule in groupe.total.cellules %}{% include "finances/budget/partials/td.html" with total=forloop.last editable=False %}{% endfor %}
+              {% else %}
+                {% for cellule in premiere.cellules %}{% include "finances/budget/partials/td.html" with total=forloop.last editable=True %}{% endfor %}
+              {% endif %}
+            </tr>
+            {% endwith %}
+            {% if groupe.detaille %}
+              {% for ligne in groupe.lignes %}
+                <tr class="ligne-detail text-slate-600 dark:text-slate-300">
+                  <th scope="row" class="bg-white py-2 pl-14 pr-4 text-left font-normal dark:bg-slate-900">
+                    <div class="flex items-center gap-2">
+                      <span class="truncate {% if ligne.hors_budget %}italic text-slate-400{% endif %}">{{ ligne.libelle }}</span>
+                      {% if ligne.budget %}<a href="{% url 'finances:budget_ligne_modifier' ligne.budget.pk %}" class="ml-auto text-slate-300 hover:text-indigo-600" title="Modifier la ligne">{% icone "pencil" "h-3.5 w-3.5" %}</a>{% endif %}
+                    </div>
+                  </th>
+                  {% for cellule in ligne.cellules %}{% include "finances/budget/partials/td.html" with total=forloop.last editable=True %}{% endfor %}
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        {% endfor %}
+        <tbody class="border-t-2 border-slate-200 font-semibold dark:border-slate-700">
+          <tr>
+            <th scope="row" class="bg-slate-50 px-4 py-2.5 text-left dark:bg-slate-800">{{ section.total.libelle }}</th>
+            {% for cellule in section.total.cellules %}{% include "finances/budget/partials/td.html" with total=forloop.last editable=False %}{% endfor %}
+          </tr>
+        </tbody>
+      {% endfor %}
+
+      <tfoot class="border-t-2 border-slate-300 font-bold dark:border-slate-600">
+        <tr>
+          <th scope="row" class="bg-indigo-50 px-4 py-3 text-left dark:bg-indigo-950/50">{{ matrice.solde.libelle }}</th>
+          {% for cellule in matrice.solde.cellules %}
+            <td class="tabular whitespace-nowrap bg-indigo-50/60 px-3 py-3 text-right dark:bg-indigo-950/30 {% if forloop.last %}border-l border-slate-200 dark:border-slate-700{% endif %}"
+                title="Prévu {{ cellule.prevu|monnaie:devise }} · Réel {{ cellule.reel|monnaie:devise }}">
+              <div class="{% if cellule.commencee %}{{ cellule.reel|couleur_montant }}{% else %}text-slate-300{% endif %}">{% if cellule.commencee %}{{ cellule.reel|monnaie_courte:devise }}{% else %}—{% endif %}</div>
+              <div class="text-xs font-normal text-slate-500">/ {{ cellule.prevu|monnaie_courte:devise }}</div>
+            </td>
+          {% endfor %}
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Légende -->
+  <ul class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
+    <li class="flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-rose-100 dark:bg-rose-950"></span> Dépassement</li>
+    <li class="flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-amber-100 dark:bg-amber-950"></span> Seuil d'alerte atteint ({{ request.user.profile.seuil_alerte_budget|pct:0 }})</li>
+    <li class="flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-orange-100 dark:bg-orange-950"></span> Revenu sous l'objectif</li>
+    <li><span class="font-semibold text-indigo-600 underline decoration-dotted">/ 123 €</span> prévu saisi manuellement</li>
+    <li>≈ projection (réel écoulé + prévu à venir)</li>
+    <li>Cliquez sur un montant prévu pour le modifier.</li>
+  </ul>
+  {% endif %}
+</div>
+{% endwith %}

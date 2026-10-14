@@ -1,0 +1,13 @@
+{% load finances_tags %}<form hx-post="{% url 'finances:budget_cellule' allocation.pk %}" hx-swap="outerHTML" class="inline-flex items-center gap-1"
+      method="post" action="{% url 'finances:budget_cellule' allocation.pk %}">
+  {% csrf_token %}
+  <label class="sr-only" for="cellule-{{ allocation.pk }}">Montant prévu</label>
+  <input id="cellule-{{ allocation.pk }}" name="montant" inputmode="decimal" autofocus
+         value="{{ form.montant.value|valeur_saisie }}" onfocus="this.select()"
+         class="w-20 rounded border px-1 py-0.5 text-right text-xs {% if form.errors %}border-rose-500{% else %}border-indigo-400{% endif %} dark:bg-slate-800">
+  <button type="submit" class="rounded p-0.5 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950" title="Enregistrer">{% icone "check" "h-3.5 w-3.5" %}</button>
+  {% if allocation.saisi_manuellement %}
+    <button type="button" hx-post="{% url 'finances:budget_cellule_reinitialiser' allocation.pk %}" hx-target="closest form" hx-swap="outerHTML"
+            class="rounded p-0.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" title="Revenir au montant calculé">{% icone "rotate-ccw" "h-3.5 w-3.5" %}</button>
+  {% endif %}
+</form>

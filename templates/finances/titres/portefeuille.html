@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}Compte titres{% endblock %}
+{% block titre_mobile %}Compte titres{% endblock %}
+{% block h1 %}{% if compte %}{{ compte.nom }}{% else %}Compte titres{% endif %}{% endblock %}
+{% block actions %}
+  <a href="{% url 'finances:rapport_titres' %}{% if compte %}?compte={{ compte.pk }}{% endif %}" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900">{% icone "chart-pie" %} Rapport</a>
+  <a href="{% url 'finances:titre_operation_ajouter' %}?type=ACHAT{% if compte %}&compte={{ compte.pk }}{% endif %}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">{% icone "plus" %} Achat / vente</a>
+{% endblock %}
+
+{% block contenu %}
+{% if comptes_titres|length > 1 %}
+  <nav class="mb-5 flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 text-sm dark:bg-slate-800" aria-label="Comptes titres">
+    <a href="{% url 'finances:portefeuille' %}" class="rounded-lg px-3 py-1.5 font-medium {% if not compte %}bg-white shadow-sm dark:bg-slate-700{% else %}text-slate-600 dark:text-slate-300{% endif %}">Tous</a>
+    {% for c in comptes_titres %}
+      <a href="?compte={{ c.pk }}" class="rounded-lg px-3 py-1.5 font-medium {% if compte.pk == c.pk %}bg-white shadow-sm dark:bg-slate-700{% else %}text-slate-600 dark:text-slate-300{% endif %}">{{ c.nom }}</a>
+    {% endfor %}
+  </nav>
+{% endif %}
+
+{% if not comptes_titres %}
+  <div class="rounded-2xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
+    <p class="font-medium">Aucun compte titres.</p>
+    <p class="mt-1 text-sm text-slate-500">Créez un compte de type « Compte titres », alimentez-le par un virement interne, puis saisissez vos achats.</p>
+    <a href="{% url 'finances:compte_ajouter' %}" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">{% icone "plus" %} Créer un compte titres</a>
+  </div>
+{% else %}
+{% with r=rapport %}
+<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+  {% include "components/carte.html" with titre="Valeur totale" valeur=r.valeur_totale|monnaie:devise icone_nom="wallet" %}
+  {% include "components/carte.html" with titre="Titres (valeur de marché)" valeur=r.valeur|monnaie:devise icone_nom="chart-candlestick" %}
+  {% include "components/carte.html" with titre="Liquidités" valeur=r.liquidites|monnaie:devise icone_nom="landmark" %}
+  <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <p class="text-sm text-slate-500">+/- value latente</p>
+    <p class="tabular mt-2 text-2xl font-semibold {{ r.pv_latente|couleur_montant }}">{{ r.pv_latente|monnaie_signe:devise }}</p>
+    <p class="tabular mt-1 text-xs {{ r.pv_latente|couleur_montant }}">{{ r.pv_latente_pct|pct_signe }}</p>
+  </div>
+  <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <p class="text-sm text-slate-500">Performance globale</p>
+    <p class="tabular mt-2 text-2xl font-semibold {{ r.performance|couleur_montant }}">{{ r.performance|monnaie_signe:devise }}</p>
+    <p class="mt-1 text-xs text-slate-500">dont réalisée {{ r.pv_realisee|monnaie_signe:devise }} · dividendes {{ r.dividendes|monnaie:devise }}</p>
+  </div>
+</section>
+
+{% if r.cours_manquants %}
+  <p class="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">{% icone "triangle-alert" %}
+    Cours manquant pour {% for p in r.cours_manquants %}{{ p.ticker_symbole }}{% if not forloop.last %}, {% endif %}{% endfor %} : valorisé au PMPA. Cliquez sur le cours pour le saisir.</p>
+{% endif %}
+
+<section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  <h2 class="border-b border-slate-200 px-5 py-4 font-semibold dark:border-slate-800">Positions</h2>
+  {% if r.lignes %}
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-800/60">
+        <tr>
+          <th class="py-3 pl-5 pr-3">Titre</th><th class="py-3 pr-3 text-right">Quantité</th><th class="py-3 pr-3 text-right">PMPA</th>
+          <th class="py-3 pr-3 text-right">Cours</th><th class="py-3 pr-3 text-right">Valeur</th><th class="py-3 pr-3 text-right">+/- value</th>
+          <th class="hidden py-3 pr-3 md:table-cell">Poids</th><th class="py-3 pr-5"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for l in r.lignes %}{% with position=l.position %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <td class="py-3 pl-5 pr-3">
+              <a href="{% url 'finances:position' position.pk %}" class="font-semibold hover:underline">{{ position.ticker_symbole }}</a>
+              <p class="max-w-[14rem] truncate text-xs text-slate-500">{{ position.nom_action }} · {{ position.get_type_actif_display }}</p>
+            </td>
+            <td class="tabular py-3 pr-3 text-right">{{ position.quantite|quantite }}</td>
+            <td class="tabular py-3 pr-3 text-right">{{ position.pmpa|monnaie:position.compte_titre.devise }}</td>
+            <td class="py-3 pr-3 text-right">{% include "finances/titres/partials/cours.html" %}</td>
+            <td class="tabular py-3 pr-3 text-right font-medium">{{ l.valeur|monnaie:devise }}</td>
+            <td class="tabular py-3 pr-3 text-right {{ l.pv_latente|couleur_montant }}">{{ l.pv_latente|monnaie_signe:devise }}<span class="block text-xs">{{ l.perf_pct|pct_signe }}</span></td>
+            <td class="hidden py-3 pr-3 md:table-cell">
+              <div class="flex items-center gap-2"><div class="h-1.5 w-20 rounded-full bg-slate-100 dark:bg-slate-800"><div class="h-1.5 rounded-full bg-indigo-500" style="width: {{ l.poids|largeur_pct }}"></div></div><span class="tabular text-xs text-slate-500">{{ l.poids|pct }}</span></div>
+            </td>
+            <td class="whitespace-nowrap py-3 pr-5 text-right text-xs">
+              <a href="{% url 'finances:titre_operation_ajouter' %}?position={{ position.pk }}&type=ACHAT" class="rounded px-1.5 py-1 font-medium text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950">Acheter</a>
+              <a href="{% url 'finances:titre_operation_ajouter' %}?position={{ position.pk }}&type=VENTE" class="rounded px-1.5 py-1 font-medium text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950">Vendre</a>
+              <a href="{% url 'finances:titre_operation_ajouter' %}?position={{ position.pk }}&type=DIVIDENDE" class="rounded px-1.5 py-1 font-medium text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950">Dividende</a>
+            </td>
+          </tr>
+        {% endwith %}{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="px-5 py-10 text-center text-sm text-slate-500">Aucune position ouverte.</p>
+  {% endif %}
+</section>
+{% endwith %}
+
+<section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  <h2 class="border-b border-slate-200 px-5 py-4 font-semibold dark:border-slate-800">Dernières opérations sur titres</h2>
+  {% include "finances/titres/_table_operations.html" with operations=dernieres_operations afficher_titre=True %}
+</section>
+{% endif %}
+{% endblock %}

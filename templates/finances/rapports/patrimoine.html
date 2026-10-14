@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}Évolution du patrimoine{% endblock %}
+{% block titre_mobile %}Rapports{% endblock %}
+{% block h1 %}Rapports{% endblock %}
+{% block contenu %}
+{% include "finances/rapports/_onglets.html" %}
+{% for a in historique.avertissements %}<p class="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">{{ a }}</p>{% endfor %}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <p class="text-sm text-slate-500">Patrimoine net actuel</p>
+    <p class="tabular text-3xl font-bold tracking-tight">{{ patrimoine.total|monnaie:devise }}</p>
+    <p class="tabular text-sm {{ historique.variation|couleur_montant }}">{{ historique.variation|monnaie_signe:devise }} ({{ historique.variation_pct|pct_signe }}) sur la période</p>
+  </div>
+  <nav class="inline-flex rounded-xl bg-slate-100 p-1 text-sm dark:bg-slate-800" aria-label="Horizon">
+    {% for cle, nb in horizons.items %}
+      <a href="?horizon={{ cle }}" class="rounded-lg px-3 py-1.5 font-medium {% if cle == horizon %}bg-white text-indigo-700 shadow-sm dark:bg-slate-700 dark:text-white{% else %}text-slate-600 dark:text-slate-300{% endif %}">{{ cle }} an{{ cle|pluralize }}</a>
+    {% endfor %}
+  </nav>
+</div>
+<div class="mb-6 grid gap-6 xl:grid-cols-3">
+  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-2 dark:border-slate-800 dark:bg-slate-900">
+    <h2 class="font-semibold">Patrimoine net</h2>
+    {% include "components/graphique.html" with type="courbe" source="" hauteur="h-72" titre="Évolution du patrimoine net" classe="mt-2" %}
+  </section>
+  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <h2 class="font-semibold">Par type de compte</h2>
+    {% include "components/graphique.html" with type="courbes" source="" series="par_type" hauteur="h-72" titre="Évolution par type de compte" classe="mt-2" %}
+  </section>
+</div>
+<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  <h2 class="border-b border-slate-200 px-5 py-4 font-semibold dark:border-slate-800">Valeur en fin de mois</h2>
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-800/60">
+        <tr><th class="px-4 py-3 text-left">Compte</th>{% for l in historique.libelles %}{% if forloop.revcounter <= 12 %}<th class="whitespace-nowrap px-3 py-3 text-right">{{ l }}</th>{% endif %}{% endfor %}</tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for serie in historique.comptes %}
+          <tr><th scope="row" class="whitespace-nowrap px-4 py-2 text-left font-medium"><span class="mr-2 inline-block h-2 w-2 rounded-full" style="background-color: {{ serie.couleur }}"></span>{{ serie.nom }}</th>
+            {% for v in serie.valeurs %}{% if forloop.revcounter <= 12 %}<td class="tabular whitespace-nowrap px-3 py-2 text-right">{% if v is None %}—{% else %}{{ v|monnaie_courte:devise }}{% endif %}</td>{% endif %}{% endfor %}</tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="border-t-2 border-slate-200 font-semibold dark:border-slate-700">
+        <tr><th scope="row" class="px-4 py-2.5 text-left">Total</th>{% for v in historique.total %}{% if forloop.revcounter <= 12 %}<td class="tabular whitespace-nowrap px-3 py-2.5 text-right">{{ v|monnaie_courte:devise }}</td>{% endif %}{% endfor %}</tr>
+      </tfoot>
+    </table>
+  </div>
+  <p class="px-5 py-3 text-xs text-slate-500">Le tableau montre les 12 derniers points ; le graphique couvre tout l'horizon choisi.</p>
+</section>
+{% endblock %}
+{% block scripts %}{% include "components/scripts_graphiques.html" %}{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block contenu_complet %}
+<div class="flex min-h-[80vh] items-center justify-center">
+  <div class="w-full max-w-md">
+    <div class="mb-8 flex flex-col items-center gap-3">
+      <span class="grid h-12 w-12 place-items-center rounded-xl bg-indigo-600 text-white shadow-lg">{% icone "wallet" "h-6 w-6" %}</span>
+      <h1 class="text-2xl font-bold tracking-tight">{% block h1 %}{% endblock %}</h1>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      {% block formulaire %}{% endblock %}
+    </div>
+    {% block apres %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "components/page_formulaire.html" %}
+{% load finances_tags %}
+{% block titre %}{% if object %}Modifier la ligne{% else %}Nouvelle ligne budgétaire{% endif %}{% endblock %}
+{% block h1 %}{% if object %}Modifier « {{ object.sous_categorie|default:object.categorie }} »{% else %}Nouvelle ligne budgétaire{% endif %}{% endblock %}
+{% block sous_titre %}<p class="mt-1 text-sm text-slate-500">Plan « {{ plan.nom }} » · {{ plan.annee_debut }}–{{ plan.annee_fin }} · indexation {{ plan.taux_indexation|pct:2 }}</p>{% endblock %}
+{% block description %}
+<p class="mb-4 text-sm text-slate-500">Exemples : courses <em>400 € mensuels</em> ; taxe foncière <em>1 200 € annuels en octobre</em> ; assurance <em>annuelle lissée</em> (100 €/mois). Sans sous-catégorie, la ligne couvre toute la catégorie (hors sous-catégories budgétées séparément).</p>
+{% endblock %}
+{% block champs %}
+  <div class="sm:col-span-2 grid gap-5 sm:grid-cols-2">
+    <div hx-get="{% url 'finances:options_sous_categories' %}" hx-trigger="change" hx-target="#{{ form.sous_categorie.id_for_label }}" hx-include="closest form">
+      {% champ form.categorie %}
+    </div>
+    {% champ form.sous_categorie %}
+  </div>
+  {% champ form.montant_reference %}
+  {% champ form.periodicite %}
+  <div data-afficher-si="!periodicite:MENSUELLE">{% champ form.mois_reference %}</div>
+  <div class="self-end" data-afficher-si="!periodicite:MENSUELLE">{% champ form.lisser %}</div>
+  {% champ form.taux_indexation %}
+  {% champ form.notes %}
+{% endblock %}
+{% block suppression %}{% if object %}<a href="{% url 'finances:budget_ligne_supprimer' object.pk %}" class="ml-auto text-sm font-medium text-rose-600 hover:underline">Supprimer la ligne</a>{% endif %}{% endblock %}

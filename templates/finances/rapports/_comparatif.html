@@ -1,0 +1,38 @@
+{% load finances_tags %}
+<section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  <div class="grid grid-cols-3 gap-3 border-b border-slate-200 p-5 text-sm dark:border-slate-800">
+    <div><p class="text-slate-500">Revenus</p><p class="tabular font-semibold">{{ comp.totaux_a.revenus|monnaie_courte:devise }} <span class="text-xs font-normal text-slate-400">vs {{ comp.totaux_b.revenus|monnaie_courte:devise }}</span></p></div>
+    <div><p class="text-slate-500">Dépenses</p><p class="tabular font-semibold">{{ comp.totaux_a.depenses|monnaie_courte:devise }} <span class="text-xs font-normal text-slate-400">vs {{ comp.totaux_b.depenses|monnaie_courte:devise }}</span></p></div>
+    <div><p class="text-slate-500">Solde</p><p class="tabular font-semibold {{ comp.solde.a|couleur_montant }}">{{ comp.solde.a|monnaie_courte:devise }} <span class="text-xs font-normal text-slate-400">vs {{ comp.solde.b|monnaie_courte:devise }}</span></p></div>
+  </div>
+  <div class="border-b border-slate-200 p-5 dark:border-slate-800">
+    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Dépenses par catégorie</p>
+    {% include "components/graphique.html" with type="comparatif" source=cle hauteur="h-80" titre="Dépenses par catégorie, période courante et période de référence" classe="mt-2" %}
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <tr><th class="px-5 py-3 text-left">Catégorie</th><th class="px-3 py-3 text-right">{{ comp.libelle_a }}</th><th class="px-3 py-3 text-right">{{ comp.libelle_b }}</th><th class="px-5 py-3 text-right">Variation</th></tr>
+      </thead>
+      {% for section in comp.sections %}
+        <tbody class="divide-y divide-slate-100 border-t border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+          <tr><th colspan="4" class="px-5 pb-1 pt-3 text-left text-xs font-bold uppercase tracking-wider {% if section.type == 'DEPENSE' %}text-rose-600{% else %}text-emerald-600{% endif %}">{{ section.libelle }}</th></tr>
+          {% for l in section.lignes %}
+            <tr>
+              <td class="px-5 py-2"><span class="mr-2 inline-block h-2 w-2 rounded-full" style="background-color: {{ l.couleur }}"></span>{{ l.nom }}</td>
+              <td class="tabular px-3 py-2 text-right">{{ l.a|monnaie:devise }}</td>
+              <td class="tabular px-3 py-2 text-right text-slate-500">{{ l.b|monnaie:devise }}</td>
+              <td class="tabular px-5 py-2 text-right {% if section.type == 'DEPENSE' %}{{ l.variation|couleur_montant:True }}{% else %}{{ l.variation|couleur_montant }}{% endif %}">{{ l.variation|monnaie_signe:devise }} <span class="text-xs">({{ l.variation_pct|pct_signe }})</span></td>
+            </tr>
+          {% endfor %}
+          <tr class="font-semibold">
+            <td class="px-5 py-2">{{ section.total.nom }}</td>
+            <td class="tabular px-3 py-2 text-right">{{ section.total.a|monnaie:devise }}</td>
+            <td class="tabular px-3 py-2 text-right text-slate-500">{{ section.total.b|monnaie:devise }}</td>
+            <td class="tabular px-5 py-2 text-right {% if section.type == 'DEPENSE' %}{{ section.total.variation|couleur_montant:True }}{% else %}{{ section.total.variation|couleur_montant }}{% endif %}">{{ section.total.variation|monnaie_signe:devise }} <span class="text-xs">({{ section.total.variation_pct|pct_signe }})</span></td>
+          </tr>
+        </tbody>
+      {% endfor %}
+    </table>
+  </div>
+</section>

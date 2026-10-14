@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}{{ compte.nom }}{% endblock %}
+{% block titre_mobile %}{{ compte.nom }}{% endblock %}
+{% block fil %}<a href="{% url 'finances:comptes' %}" class="text-sm text-slate-500 hover:underline">Comptes</a>{% endblock %}
+{% block h1 %}<span class="mr-2 inline-block h-3 w-3 rounded-full align-middle" style="background-color: {{ compte.couleur }}"></span>{{ compte.nom }}{% endblock %}
+{% block sous_titre %}<p class="mt-1 text-sm text-slate-500">{{ compte.get_type_display }}{% if compte.institution %} · {{ compte.institution }}{% endif %}{% if compte.numero %} · {{ compte.numero }}{% endif %} · ouvert le {{ compte.date_creation|date:"d/m/Y" }}{% if compte.archive %} · <strong>archivé</strong>{% endif %}</p>{% endblock %}
+{% block actions %}
+  {% if compte.est_compte_titre %}<a href="{% url 'finances:portefeuille' %}?compte={{ compte.pk }}" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900">{% icone "chart-candlestick" %} Portefeuille</a>{% endif %}
+  <a href="{% url 'finances:compte_modifier' compte.pk %}" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900">{% icone "pencil" %} Modifier</a>
+  <a href="{% url 'finances:operation_ajouter' %}?compte={{ compte.pk }}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">{% icone "plus" %} Opération</a>
+{% endblock %}
+{% block contenu %}
+<div class="grid gap-4 sm:grid-cols-3">
+  {% include "components/carte.html" with titre="Solde actuel" valeur=compte.solde_total|monnaie:compte.devise icone_nom="wallet" %}
+  {% include "components/carte.html" with titre="Entrées du mois" valeur=flux_mois.revenus|monnaie:compte.devise icone_nom="trending-up" classe_valeur="text-emerald-600 dark:text-emerald-400" %}
+  {% include "components/carte.html" with titre="Sorties du mois" valeur=flux_mois.depenses|monnaie:compte.devise icone_nom="shopping-bag" classe_valeur="text-rose-600 dark:text-rose-400" %}
+</div>
+{% if compte.est_compte_titre %}
+  <p class="mt-4 rounded-lg bg-slate-100 p-3 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">Le « solde après » ci-dessous ne tient compte que des opérations de trésorerie ; achats, ventes et dividendes figurent dans le portefeuille.</p>
+{% endif %}
+<section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  {% if operations %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-800/60">
+          <tr><th class="py-3 pl-4 pr-3">Date</th><th class="py-3 pr-3">Libellé</th><th class="py-3 pr-3">Catégorie</th><th class="py-3 pr-3 text-right">Montant</th><th class="hidden py-3 pr-3 text-right sm:table-cell">Solde après</th><th class="hidden py-3 pr-3 lg:table-cell">Statut</th><th class="py-3 pr-4"></th></tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for operation in operations %}{% include "components/ligne_operation.html" with compte=compte solde=True %}{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="px-6 py-10 text-center text-sm text-slate-500">Aucune opération sur ce compte.</p>
+  {% endif %}
+</section>
+{% include "components/pagination.html" %}
+{% endblock %}

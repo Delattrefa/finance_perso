@@ -1,0 +1,5 @@
+{% extends "components/page_formulaire.html" %}
+{% block titre %}{% if object %}Modifier {{ object }}{% else %}Nouvelle catégorie{% endif %}{% endblock %}
+{% block h1 %}{% if object %}Modifier « {{ object }} »{% else %}Nouvelle catégorie{% endif %}{% endblock %}
+{% block description %}<p class="mb-4 text-sm text-slate-500">Icône : un nom <a class="underline" href="https://lucide.dev/icons/" target="_blank" rel="noopener">Lucide</a> (ex. <code>shopping-cart</code>) ou un emoji.</p>{% endblock %}
+{% block suppression %}{% if object %}<a href="{% url 'finances:categorie_supprimer' object.pk %}" class="ml-auto text-sm font-medium text-rose-600 hover:underline">Supprimer</a>{% endif %}{% endblock %}

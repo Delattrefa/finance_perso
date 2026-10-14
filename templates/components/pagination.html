@@ -1,0 +1,15 @@
+{% load finances_tags %}{% if page_obj.has_other_pages %}
+<nav class="mt-4 flex items-center justify-between text-sm" aria-label="Pagination">
+  <p class="text-slate-500">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</p>
+  <div class="flex gap-1">
+    {% if page_obj.has_previous %}
+      <a href="?{% parametres_page page_obj.previous_page_number %}" {% if cible %}hx-get="?{% parametres_page page_obj.previous_page_number %}" hx-target="{{ cible }}" hx-push-url="true"{% endif %}
+         class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">{% icone "chevron-left" %} Précédente</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+      <a href="?{% parametres_page page_obj.next_page_number %}" {% if cible %}hx-get="?{% parametres_page page_obj.next_page_number %}" hx-target="{{ cible }}" hx-push-url="true"{% endif %}
+         class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">Suivante {% icone "chevron-right" %}</a>
+    {% endif %}
+  </div>
+</nav>
+{% endif %}

@@ -1,0 +1,5 @@
+{% extends "components/page_formulaire.html" %}
+{% block titre %}{% if object %}Modifier le plan{% else %}Nouveau plan budgétaire{% endif %}{% endblock %}
+{% block h1 %}{% if object %}Modifier « {{ object.nom }} »{% else %}Nouveau plan budgétaire{% endif %}{% endblock %}
+{% block description %}<p class="mb-4 text-sm text-slate-500">L'indexation annuelle s'applique d'une année sur l'autre à toutes les lignes (sauf indexation spécifique). Modifier l'année de début, la durée ou l'indexation recalcule les montants, <strong>en conservant vos saisies manuelles</strong>.</p>{% endblock %}
+{% block suppression %}{% if object %}<a href="{% url 'finances:budget_plan_supprimer' object.pk %}" class="ml-auto text-sm font-medium text-rose-600 hover:underline">Supprimer le plan</a>{% endif %}{% endblock %}

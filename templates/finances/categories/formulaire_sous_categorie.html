@@ -1,0 +1,4 @@
+{% extends "components/page_formulaire.html" %}
+{% block titre %}{% if object %}Modifier {{ object.nom }}{% else %}Nouvelle sous-catégorie{% endif %}{% endblock %}
+{% block h1 %}{% if object %}Modifier « {{ object }} »{% else %}Nouvelle sous-catégorie{% endif %}{% endblock %}
+{% block suppression %}{% if object %}<a href="{% url 'finances:sous_categorie_supprimer' object.pk %}" class="ml-auto text-sm font-medium text-rose-600 hover:underline">Supprimer</a>{% endif %}{% endblock %}

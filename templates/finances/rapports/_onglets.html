@@ -1,0 +1,8 @@
+{% with courant=request.resolver_match.url_name %}
+<nav class="mb-6 flex flex-wrap gap-1 border-b border-slate-200 text-sm dark:border-slate-800" aria-label="Rapports">
+  <a href="{% url 'finances:rapport_categories' %}" class="-mb-px border-b-2 px-3 py-2 font-medium {% if courant == 'rapport_categories' %}border-indigo-600 text-indigo-700 dark:text-indigo-300{% else %}border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200{% endif %}">Par catégorie</a>
+  <a href="{% url 'finances:rapport_patrimoine' %}" class="-mb-px border-b-2 px-3 py-2 font-medium {% if courant == 'rapport_patrimoine' %}border-indigo-600 text-indigo-700 dark:text-indigo-300{% else %}border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200{% endif %}">Patrimoine</a>
+  <a href="{% url 'finances:rapport_comparatifs' %}" class="-mb-px border-b-2 px-3 py-2 font-medium {% if courant == 'rapport_comparatifs' %}border-indigo-600 text-indigo-700 dark:text-indigo-300{% else %}border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200{% endif %}">Comparatifs</a>
+  <a href="{% url 'finances:rapport_titres' %}" class="-mb-px border-b-2 px-3 py-2 font-medium {% if courant == 'rapport_titres' %}border-indigo-600 text-indigo-700 dark:text-indigo-300{% else %}border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200{% endif %}">Compte titres</a>
+</nav>
+{% endwith %}

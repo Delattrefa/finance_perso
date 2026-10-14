@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}{% if object %}Modifier l'opération{% else %}Nouvelle opération{% endif %}{% endblock %}
+{% block titre_mobile %}{% if object %}Modifier{% else %}Saisie{% endif %}{% endblock %}
+{% block h1 %}{% if object %}Modifier l'opération{% else %}Nouvelle opération{% endif %}{% endblock %}
+{% block sous_titre %}<p class="mt-1 text-sm text-slate-500"><kbd class="rounded border px-1 text-xs">Ctrl</kbd> + <kbd class="rounded border px-1 text-xs">Entrée</kbd> pour enregistrer.</p>{% endblock %}
+{% block actions %}
+  {% if object %}
+    <a href="{% url 'finances:operation_ajouter' %}?depuis={{ object.pk }}" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900">{% icone "copy" %} Dupliquer</a>
+  {% endif %}
+{% endblock %}
+
+{% block contenu %}
+<form method="post" novalidate class="max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  {% csrf_token %}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  {% include "components/erreurs_formulaire.html" %}
+
+  <!-- Type : recharge la liste des catégories correspondantes -->
+  <div hx-get="{% url 'finances:options_categories' %}" hx-trigger="change" hx-target="#{{ form.categorie.id_for_label }}" hx-include="closest form">
+    {% include "components/segmente.html" with field=form.type %}
+  </div>
+
+  <div class="mt-6 grid gap-5 sm:grid-cols-3">
+    <div class="sm:col-span-1">
+      <label for="{{ form.montant.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Montant <span class="text-rose-500">*</span></label>
+      <div class="relative">
+        {{ form.montant }}
+        <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-slate-400">{{ devise }}</span>
+      </div>
+      {% for e in form.montant.errors %}<p class="mt-1 text-xs font-medium text-rose-600">{{ e }}</p>{% endfor %}
+    </div>
+    {% champ form.date %}
+    {% champ form.compte %}
+  </div>
+
+  <!-- Virement interne -->
+  <div class="mt-5 grid gap-5 rounded-xl bg-slate-50 p-4 sm:grid-cols-2 dark:bg-slate-800/50" data-afficher-si="type:VIREMENT_INTERNE">
+    {% champ form.compte_destination %}
+    {% champ form.montant_destination %}
+  </div>
+
+  <!-- Classement : la catégorie filtre les sous-catégories -->
+  <div class="mt-5 grid gap-5 sm:grid-cols-2" data-afficher-si="!type:VIREMENT_INTERNE">
+    <div hx-get="{% url 'finances:options_sous_categories' %}" hx-trigger="change, htmx:afterSwap" hx-target="#{{ form.sous_categorie.id_for_label }}" hx-include="closest form">
+      {% champ form.categorie %}
+    </div>
+    {% champ form.sous_categorie %}
+  </div>
+
+  <div class="mt-5 grid gap-5 sm:grid-cols-2">
+    {% champ form.tiers_payeur %}
+    {% champ form.description %}
+  </div>
+  <datalist id="tiers-suggestions">{% for tiers in suggestions_tiers %}<option value="{{ tiers }}">{% endfor %}</datalist>
+
+  <div class="mt-5 grid gap-5 sm:grid-cols-2">
+    {% include "components/segmente.html" with field=form.statut %}
+  </div>
+
+  <details class="mt-5 group" {% if form.notes.value %}open{% endif %}>
+    <summary class="cursor-pointer text-sm font-medium text-slate-600 dark:text-slate-300">Notes</summary>
+    <div class="mt-2">{{ form.notes }}</div>
+  </details>
+
+  <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-5 dark:border-slate-800">
+    <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">{% icone "check" %} Enregistrer</button>
+    {% if not object %}
+      <button type="submit" name="_autre" value="1" class="inline-flex items-center gap-2 rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950">{% icone "plus" %} Enregistrer et saisir une autre</button>
+    {% endif %}
+    <a href="{% url_retour %}" class="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Annuler</a>
+    {% if object %}
+      <a href="{% url 'finances:operation_supprimer' object.pk %}" class="ml-auto inline-flex items-center gap-1 text-sm font-medium text-rose-600 hover:underline">{% icone "trash-2" %} Supprimer</a>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% comment %}
+Emplacement d'un graphique. Paramètres : type, source (chemin dans `graphiques`), hauteur (classe Tailwind),
+titre (aria-label), et selon le type : series, champ.
+Le conteneur inclut la bande des axes (pas de défilement imbriqué).
+{% endcomment %}
+<div data-graphique="{{ type }}" data-source="{{ source }}"{% if series %} data-series="{{ series }}"{% endif %}{% if champ %} data-champ="{{ champ }}"{% endif %} data-titre="{{ titre }}"
+     class="relative {% firstof hauteur 'h-64' %} {% firstof classe '' %}">
+  <canvas role="img" aria-label="{{ titre }}"></canvas>
+</div>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}Opérations{% endblock %}
+{% block titre_mobile %}Opérations{% endblock %}
+{% block h1 %}Opérations{% endblock %}
+{% block sous_titre %}<p class="mt-1 text-sm text-slate-500">Recherche multicritère — les résultats se mettent à jour pendant la saisie.</p>{% endblock %}
+{% block actions %}
+  <a href="{% url 'finances:operation_ajouter' %}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">{% icone "plus" %} Nouvelle opération</a>
+{% endblock %}
+
+{% block contenu %}
+<div class="grid gap-6 xl:grid-cols-[20rem_1fr]">
+  <!-- Filtres -->
+  <aside>
+    <form id="form-recherche" method="get" action="{% url 'finances:recherche' %}"
+          hx-get="{% url 'finances:recherche' %}" hx-target="#resultats" hx-push-url="true" hx-indicator="#chargement"
+          hx-trigger="input changed delay:400ms from:#id_q, change delay:150ms, submit"
+          class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-6 dark:border-slate-800 dark:bg-slate-900">
+      <div class="relative">
+        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">{% icone "search" %}</span>
+        {{ form.q }}
+      </div>
+      {% champ form.periode %}
+      <div class="grid grid-cols-2 gap-3" data-afficher-si="periode:perso">
+        {% champ form.date_debut %}{% champ form.date_fin %}
+      </div>
+      <div class="grid grid-cols-2 gap-3">{% champ form.montant_min %}{% champ form.montant_max %}</div>
+      {% champ form.types %}
+      <details {% if form.comptes.value %}open{% endif %}>
+        <summary class="cursor-pointer text-sm font-medium">Comptes</summary>
+        <div class="mt-2 max-h-40 space-y-1 overflow-y-auto text-sm [&_label]:flex [&_label]:items-center [&_label]:gap-2 [&_input]:h-4 [&_input]:w-4 [&_input]:rounded [&_input]:text-indigo-600">{{ form.comptes }}</div>
+      </details>
+      <details {% if form.categories.value or form.sous_categories.value or form.sans_categorie.value %}open{% endif %}>
+        <summary class="cursor-pointer text-sm font-medium">Catégories</summary>
+        <div class="mt-2 space-y-3">
+          {% champ form.categories %}
+          {% champ form.sous_categories %}
+          {% champ form.sans_categorie %}
+        </div>
+      </details>
+      {% champ form.statut %}
+      {% champ form.tri %}
+      <div class="flex gap-2">
+        <button type="submit" class="flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Rechercher</button>
+        <a href="{% url 'finances:recherche' %}" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">Réinitialiser</a>
+      </div>
+    </form>
+  </aside>
+
+  <!-- Résultats -->
+  <section class="min-w-0">
+    <div id="chargement" class="htmx-indicator mb-2 items-center gap-2 text-sm text-slate-500">{% icone "loader-circle" "h-4 w-4 animate-spin" %} Recherche…</div>
+    <div id="resultats">{% include "finances/partials/resultats_recherche.html" %}</div>
+  </section>
+</div>
+{% endblock %}

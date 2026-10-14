@@ -1,0 +1,7 @@
+{% load finances_tags %}<button type="button"
+  hx-post="{% url 'finances:operation_statut' operation.pk %}" hx-swap="outerHTML"
+  title="{% if operation.statut == 'RAPPROCHE' %}Rapprochée — cliquer pour remettre en attente{% else %}En attente — cliquer pour rapprocher{% endif %}"
+  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition
+  {% if operation.statut == 'RAPPROCHE' %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300{% endif %}">
+  {% if operation.statut == 'RAPPROCHE' %}{% icone "check" "h-3 w-3" %} Rapprochée{% else %}{% icone "clock" "h-3 w-3" %} En attente{% endif %}
+</button>

@@ -1,0 +1,22 @@
+{% extends "registration/base_auth.html" %}
+{% block titre %}Connexion{% endblock %}
+{% block h1 %}Connexion à PyFinance{% endblock %}
+{% block formulaire %}
+<form method="post" class="space-y-4">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  {% if form.errors %}<p class="rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300">Identifiant ou mot de passe incorrect.</p>{% endif %}
+  <div>
+    <label for="id_username" class="mb-1 block text-sm font-medium">Nom d'utilisateur</label>
+    <input type="text" name="username" id="id_username" autocomplete="username" autofocus required value="{{ form.username.value|default:'' }}"
+           class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-600 dark:bg-slate-800">
+  </div>
+  <div>
+    <label for="id_password" class="mb-1 block text-sm font-medium">Mot de passe</label>
+    <input type="password" name="password" id="id_password" autocomplete="current-password" required
+           class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-600 dark:bg-slate-800">
+  </div>
+  <button type="submit" class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500">Se connecter</button>
+</form>
+{% endblock %}
+{% block apres %}<p class="mt-6 text-center text-sm text-slate-500">Pas encore de compte ? <a href="{% url 'inscription' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">Créer un compte</a></p>{% endblock %}

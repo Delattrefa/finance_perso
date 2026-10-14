@@ -1,0 +1,13 @@
+{% extends "registration/base_auth.html" %}
+{% load finances_tags %}
+{% block titre %}Inscription{% endblock %}
+{% block h1 %}Créer un compte{% endblock %}
+{% block formulaire %}
+<form method="post" novalidate class="space-y-4">
+  {% csrf_token %}
+  {% include "components/erreurs_formulaire.html" %}
+  {% for field in form.visible_fields %}{% champ field %}{% endfor %}
+  <button type="submit" class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500">Créer mon compte</button>
+</form>
+{% endblock %}
+{% block apres %}<p class="mt-6 text-center text-sm text-slate-500">Déjà inscrit ? <a href="{% url 'login' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">Se connecter</a></p>{% endblock %}

@@ -1,0 +1,23 @@
+{% comment %}Cellule de matrice. Paramètres : cellule, vue, total (bool), editable (bool), devise.{% endcomment %}
+{% load finances_tags %}
+<td class="whitespace-nowrap px-3 py-2 text-right align-top {{ cellule.statut|classes_statut }} {% if total %}border-l border-slate-200 dark:border-slate-700{% endif %}"
+    title="Prévu {{ cellule.prevu|monnaie:devise }} · Réel {{ cellule.reel|monnaie:devise }}{% if cellule.prevu %} · {{ cellule.taux|pct }}{% endif %}{% if cellule.statut != 'vide' %} · {{ cellule.statut|libelle_statut }}{% endif %}">
+  <div class="tabular font-medium">{% if cellule.commencee or cellule.reel %}{{ cellule.reel|monnaie_courte:devise }}{% else %}<span class="text-slate-300 dark:text-slate-600">—</span>{% endif %}</div>
+  <div class="text-xs text-slate-500 dark:text-slate-400">
+    {% if editable and cellule.allocation_id %}
+      {% include "finances/budget/partials/cellule.html" with allocation_id=cellule.allocation_id montant=cellule.prevu manuel=cellule.saisi_manuellement %}
+    {% else %}
+      <span class="tabular">/ {{ cellule.prevu|monnaie_courte:devise }}</span>
+    {% endif %}
+  </div>
+  {% if vue != "mensuelle" or total %}
+    <div class="mt-1 flex items-center justify-end gap-1.5">
+      {% if cellule.commencee and not cellule.terminee %}
+        <span class="tabular text-[11px] text-slate-400" title="Projection : réel des mois écoulés + prévu des mois à venir">≈ {{ cellule.projection|monnaie_courte:devise }}</span>
+      {% endif %}
+      {% if cellule.prevu %}
+        <span class="block h-1 w-12 rounded-full bg-slate-200/70 dark:bg-slate-700"><span class="block h-1 rounded-full {% if cellule.statut == 'depassement' %}bg-rose-500{% elif cellule.statut == 'alerte' %}bg-amber-400{% else %}bg-emerald-500{% endif %}" style="width: {{ cellule.taux|largeur_pct }}"></span></span>
+      {% endif %}
+    </div>
+  {% endif %}
+</td>

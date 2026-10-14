@@ -1,0 +1,18 @@
+{% load finances_tags %}<div class="{{ classe }}">
+  {% if est_case %}
+    <label class="flex items-center gap-2 text-sm font-medium">
+      {{ field }} <span>{{ field.label }}</span>
+    </label>
+  {% else %}
+    <label for="{{ field.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+      {{ field.label }}{% if field.field.required %}<span class="text-rose-500" aria-hidden="true"> *</span>{% endif %}
+    </label>
+    {% if est_choix_multiples %}
+      <div class="text-sm [&>div]:flex [&>div]:flex-wrap [&>div]:gap-x-4 [&>div]:gap-y-2 [&_label]:flex [&_label]:items-center [&_label]:gap-2 [&_input]:h-4 [&_input]:w-4 [&_input]:rounded [&_input]:border-slate-300 [&_input]:text-indigo-600">{{ field }}</div>
+    {% else %}
+      {{ field }}
+    {% endif %}
+  {% endif %}
+  {% if field.help_text %}<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ field.help_text }}</p>{% endif %}
+  {% for erreur in field.errors %}<p class="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">{{ erreur }}</p>{% endfor %}
+</div>

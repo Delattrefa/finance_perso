@@ -1,0 +1,35 @@
+{% load finances_tags %}
+{% if operations %}
+<div class="overflow-x-auto">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-800/60">
+      <tr><th class="py-3 pl-5 pr-3">Date</th><th class="py-3 pr-3">Opération</th>{% if afficher_titre %}<th class="py-3 pr-3">Titre</th>{% endif %}
+        <th class="py-3 pr-3 text-right">Quantité</th><th class="py-3 pr-3 text-right">Prix</th><th class="py-3 pr-3 text-right">Frais</th>
+        <th class="py-3 pr-3 text-right">Liquidités</th><th class="py-3 pr-3 text-right">+/- value</th><th class="py-3 pr-5"></th></tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+      {% for op in operations %}
+        <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+          <td class="tabular whitespace-nowrap py-2.5 pl-5 pr-3 text-slate-500">{{ op.date|date:"d/m/Y" }}</td>
+          <td class="py-2.5 pr-3"><span class="rounded-full px-2 py-0.5 text-xs font-medium
+            {% if op.type_operation == 'ACHAT' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300{% elif op.type_operation == 'VENTE' %}bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300{% else %}bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300{% endif %}">{{ op.get_type_operation_display }}</span></td>
+          {% if afficher_titre %}<td class="py-2.5 pr-3"><a href="{% url 'finances:position' op.holding_id %}" class="font-medium hover:underline">{{ op.holding.ticker_symbole }}</a></td>{% endif %}
+          <td class="tabular py-2.5 pr-3 text-right">{{ op.quantite|quantite }}</td>
+          <td class="tabular py-2.5 pr-3 text-right">{{ op.prix_unitaire|monnaie:op.compte_titre.devise }}</td>
+          <td class="tabular py-2.5 pr-3 text-right text-slate-500">{{ op.frais|monnaie:op.compte_titre.devise }}</td>
+          <td class="tabular py-2.5 pr-3 text-right font-medium {{ op.montant_net|couleur_montant }}">{{ op.montant_net|monnaie_signe:op.compte_titre.devise }}</td>
+          <td class="tabular py-2.5 pr-3 text-right {{ op.plus_value_realisee|couleur_montant }}">{% if op.plus_value_realisee is not None %}{{ op.plus_value_realisee|monnaie_signe:op.compte_titre.devise }}{% else %}—{% endif %}</td>
+          <td class="py-2.5 pr-5">
+            <div class="flex justify-end gap-1 opacity-60 transition group-hover:opacity-100">
+              <a href="{% url 'finances:titre_operation_modifier' op.pk %}?next={{ request.get_full_path|urlencode }}" class="rounded p-1 hover:bg-slate-200 dark:hover:bg-slate-700" title="Modifier">{% icone "pencil" %}</a>
+              <a href="{% url 'finances:titre_operation_supprimer' op.pk %}?next={{ request.get_full_path|urlencode }}" class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950" title="Supprimer">{% icone "trash-2" %}</a>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <p class="px-5 py-8 text-center text-sm text-slate-500">Aucune opération.</p>
+{% endif %}

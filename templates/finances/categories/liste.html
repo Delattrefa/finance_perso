@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}Catégories{% endblock %}
+{% block titre_mobile %}Catégories{% endblock %}
+{% block h1 %}Catégories{% endblock %}
+{% block actions %}
+  <form method="post" action="{% url 'finances:categories_par_defaut' %}">{% csrf_token %}
+    <button class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900" title="Ajoute uniquement les catégories manquantes">{% icone "sparkles" %} Compléter avec les catégories par défaut</button>
+  </form>
+{% endblock %}
+{% block contenu %}
+<div class="grid gap-6 lg:grid-cols-2">
+  {% include "finances/categories/_colonne.html" with titre="Dépenses" categories=depenses type="DEPENSE" %}
+  {% include "finances/categories/_colonne.html" with titre="Revenus" categories=revenus type="REVENU" %}
+</div>
+{% endblock %}

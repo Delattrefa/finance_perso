@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load finances_tags %}
+{% block titre %}Rapport par catégorie{% endblock %}
+{% block titre_mobile %}Rapports{% endblock %}
+{% block h1 %}Rapports{% endblock %}
+{% block contenu %}
+{% include "finances/rapports/_onglets.html" %}
+<form method="get" class="mb-6 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  <div class="w-52">{% champ form.periode %}</div>
+  <div class="flex gap-3" data-afficher-si="periode:perso">{% champ form.date_debut %}{% champ form.date_fin %}</div>
+  <button class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Afficher</button>
+  <p class="ml-auto text-sm text-slate-500">Du {{ debut|date:"d/m/Y" }} au {{ fin|date:"d/m/Y" }}</p>
+</form>
+<div class="mb-6 grid gap-4 sm:grid-cols-4">
+  {% include "components/carte.html" with titre="Revenus" valeur=totaux.revenus|monnaie:devise classe_valeur="text-emerald-600 dark:text-emerald-400" %}
+  {% include "components/carte.html" with titre="Dépenses" valeur=totaux.depenses|monnaie:devise classe_valeur="text-rose-600 dark:text-rose-400" %}
+  {% include "components/carte.html" with titre="Solde" valeur=totaux.solde|monnaie_signe:devise %}
+  {% include "components/carte.html" with titre="Taux d'épargne" valeur=totaux.taux_epargne|pct %}
+</div>
+<div class="grid gap-6 lg:grid-cols-2">
+  {% include "finances/rapports/_repartition.html" with rep=depenses titre="Dépenses par catégorie" cle="depenses" %}
+  {% include "finances/rapports/_repartition.html" with rep=revenus titre="Revenus par catégorie" cle="revenus" %}
+</div>
+{% endblock %}
+{% block scripts %}{% include "components/scripts_graphiques.html" %}{% endblock %}
